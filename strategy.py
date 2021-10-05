@@ -1,4 +1,6 @@
 import node
+import numpy as np
+import time
 
 class Strategy:
     """
@@ -24,17 +26,17 @@ class Strategy:
     next_step(move)
         Mueve la raíz del árbol hacia el siguiente paso, dado por el Agente
         o por el jugador.
-    equivalent_next_step(board)
-        Obtiene el hijo de la raíz del árbol para el cual es equivalente
-        el estado dado en el parámetro.
     """
 
     def __init__(self, board, limh):
         self.root = node.StateNode(board, None)
         self.limh = limh
 
+        start = time.time()
         self.expand()
-        self.evaluate_tree()
+        end = time.time()
+        print(f'{end - start} segundos')
+        #self.evaluate_tree()
 
     def expand(self):
         """
@@ -44,16 +46,32 @@ class Strategy:
         Este método es llamado al construir el árbol por primera vez y
         cuando se alcanza el horizonte limitado.
         """
+        max_turn = True
         current_level = [self.root]
         next_level = []
-        for _ in range(self.limh):
-            for current_node in current_level:
-                current_node.gen_children()
-                next_level.extend(current_node.children)
+        count = 0
+        for _ in range(self.limh): # hasta el horizonte limitado
+            for current_node in current_level: # conjunto de nodos en el mismo nivel
+                children = current_node.gen_children(max_turn)
+                for child in children: # hijos de un nodo del nivel actual
+                    found = False
+                    for sibling in next_level: # nodos hijos generados hasta el momento
+                        if child.is_equivalent_to(sibling.board):
+                            found = True
+                            break
+                    
+                    if not found:
+                        next_level.append(child)
+                        current_node.add_child(child)
+                        count += 1
+                
             
             if len(next_level) == 0: break
-            current_level = next_level
+            current_level = np.copy(next_level)
             next_level = []
+            max_turn = not max_turn
+        
+        print(f'{count} nodos generados')
     
     def evaluate_tree(self):
         """
@@ -76,12 +94,4 @@ class Strategy:
         if not self.root.has_children():
             self.expand()
             self.evaluate_tree()
-
-    def equivalent_next_step(self, board):
-        """
-        Retorna el nodo que cuyo estado es equivalente al estado del tablero
-        dado en el parámetro. El nodo retornado se debe usar para next_step().
-        """
-        for child in self.root.children:
-            if child.is_equivalent_to(board):
-                return child
+    

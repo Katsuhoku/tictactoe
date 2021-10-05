@@ -8,7 +8,7 @@ class StateNode:
 
     Atributos
     ---------
-    board : numpy.matrix
+    board : List[]
         Tablero del Tic Tac Toe con los movimientos generados hasta
         el momento en el juego, representado de forma homóloga con un
         arreglo bidimensional.
@@ -27,13 +27,31 @@ class StateNode:
     children = []
 
     def __init__(self, board, parent):
-        self.board = np.matrix(board)
+        self.board = board
         self.parent = parent
     
-    def gen_children(self):
+    def gen_children(self, max_turn):
         """
-        Genera los hijos para este nodo.
+        Genera los hijos para este nodo según sea el siguiente movimiento.
+            max_turn=True: Construye los siguientes movimientos con max (2)
+            max_turn=False: Construye los siguientes movimientos con min (1)
         """
+        children = []
+
+        if max_turn: tile = 2
+        else: tile = 1
+
+        for i in range(3):
+            for j in range(3):
+                if self.board[i][j] == 0:
+                    self.board[i][j] = tile
+                    children.append(StateNode(np.copy(self.board).tolist(), self))
+                    self.board[i][j] = 0
+        
+        return children
+    
+    def add_child(self, child_node):
+        self.children.append(child_node)
 
     def best_child(self, mode='max'):
         """
@@ -62,12 +80,41 @@ class StateNode:
                 mode='min': se tomará la evaluación del mayor de
                 los hijos
         """
+        if not self.children:
+            self.evaluation = 0
+            return 0
+        
+        if mode == 'max':
+            self.evaluation =  max([c.evaluate(mode='min') for c in self.children])
+        else:
+            self.evaluation =  min([c.evaluate(mode='max') for c in self.children])
+        
+        return self.evaluation
     
     def is_equivalent_to(self, board):
         """
         Verifica si el estado del tablero almacenado en este nodo es
         equivalente (simétrico) al tablero dado como argumento.
+
+        Parameters
+        ----------
+        board : List[]
+            Tablero en forma de listas de Python
         """
+        transforms = [
+            self.transpose_asc,
+            self.transpose_desc,
+            self.mirror_horizontal,
+            self.mirror_vertical,
+            self.rot90,
+            self.rot180,
+            self.rot270,
+        ]
+
+        for t in transforms:
+            if np.array_equal(t(), board): return True
+        
+        return False
 
     def has_children(self):
         """
@@ -76,13 +123,23 @@ class StateNode:
         if not self.children: return False
         return True
     
-    def equivalent_tile(self, board):
-        """
-        Obtiene las coordenadas (x,y) del siguiente movimiento equivalentes
-        con el tablero en el argumento.
-
-        Esto se debe a que el tablero en el estado actual del juego puede
-        no ser igual pero sí simétrico al tablero en el nodo, por tanto, para
-        colocar la pieza respectiva en el tablero del juego se requieren
-        las coordenadas relativas al estado equivalente.
-        """
+    def rot90(self):
+        return np.rot90(self.board).tolist()
+    
+    def rot180(self):
+        return np.rot90(self.board, k=2).tolist()
+    
+    def rot270(self):
+        return np.rot90(self.board, k=3).tolist()
+    
+    def mirror_vertical(self):
+        return np.flip(self.board, 1).tolist()
+    
+    def mirror_horizontal(self):
+        return np.flip(self.board).tolist()
+    
+    def transpose_desc(self):
+        return np.swapaxes(self.board, 0, 1).tolist()
+    
+    def transpose_asc(self):
+        return np.flip(np.swapaxes(np.flip(self.board, 1), 0, 1), 1).tolist()
