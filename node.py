@@ -70,7 +70,7 @@ class StateNode:
         if self._sym == 'all':
             children = self.gen_children_all(max_turn)
 
-        
+        self.children = children
         return children
     
     def gen_children_none(self, max_turn):

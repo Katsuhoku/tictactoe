@@ -52,24 +52,26 @@ class Strategy:
         count = 0
         for _ in range(self.limh): # hasta el horizonte limitado
             for current_node in current_level: # conjunto de nodos en el mismo nivel
-                children = current_node.gen_children(max_turn)
-                for child in children: # hijos de un nodo del nivel actual
-                    found = False
-                    #for sibling in next_level: # nodos hijos generados hasta el momento
-                        # if child.is_equivalent_to(sibling.board):
-                        #     found = True
-                        #     break
-                        # if np.array_equal(child.board, sibling.board):
-                        #     found = True
-                        #     break
+                next_level.extend(current_node.gen_children(max_turn))
+                # children = current_node.gen_children(max_turn)
+                # for child in children: # hijos de un nodo del nivel actual
+                #     found = False
+                #     #for sibling in next_level: # nodos hijos generados hasta el momento
+                #         # if child.is_equivalent_to(sibling.board):
+                #         #     found = True
+                #         #     break
+                #         # if np.array_equal(child.board, sibling.board):
+                #         #     found = True
+                #         #     break
                     
-                    if not found:
-                        next_level.append(child)
-                        current_node.add_child(child)
-                        count += 1
+                #     if not found:
+                #         next_level.append(child)
+                #         current_node.add_child(child)
+                #         count += 1
                 
             
             if len(next_level) == 0: break
+            count += len(next_level)
             current_level = np.copy(next_level)
             next_level = []
             max_turn = not max_turn
