@@ -52,7 +52,8 @@ class Strategy:
         count = 0
         for _ in range(self.limh): # hasta el horizonte limitado
             for current_node in current_level: # conjunto de nodos en el mismo nivel
-                next_level.extend(current_node.gen_children(max_turn))
+                if current_node.game_end == 0:
+                    next_level.extend(current_node.gen_children(max_turn))
                 # children = current_node.gen_children(max_turn)
                 # for child in children: # hijos de un nodo del nivel actual
                 #     found = False

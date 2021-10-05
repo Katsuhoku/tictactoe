@@ -1,5 +1,16 @@
 import numpy as np
 
+winning_sequences = [
+    [(0,0),(0,1),(0,2)],
+    [(1,0),(1,1),(1,2)],
+    [(2,0),(2,1),(2,2)],
+    [(0,0),(1,0),(2,0)],
+    [(0,1),(1,1),(2,1)],
+    [(0,2),(1,2),(2,2)],
+    [(0,0),(1,1),(2,2)],
+    [(0,2),(1,1),(2,0)]
+]
+
 class StateNode:
     """
     Clase para almacenar un estado del tablero, el estado del cual
@@ -32,6 +43,15 @@ class StateNode:
     def __init__(self, board, parent):
         self.board = board
         self.parent = parent
+        self.game_end = 0
+
+        for ws in winning_sequences:
+            if board[ws[0][0]][ws[0][1]] == 1 and board[ws[1][0]][ws[1][1]] == 1 and board[ws[2][0]][ws[2][1]] == 1:
+                self.game_end = 1
+                break
+            if board[ws[0][0]][ws[0][1]] == 2 and board[ws[1][0]][ws[1][1]] == 2 and board[ws[2][0]][ws[2][1]] == 2:
+                self.game_end = 2
+                break
 
         self._sym = ''
         count = 0
@@ -221,30 +241,35 @@ class StateNode:
                 los hijos
         """
         if not self.children:
-            count_max = 0
-            count_min = 0
-            swapped = np.swapaxes(self.board, 0, 1)
+            if self.game_end == 1:
+                self.evaluation = -99999
+            elif self.game_end == 2:
+                self.evaluation = 99999
+            else:
+                count_max = 0
+                count_min = 0
+                swapped = np.swapaxes(self.board, 0, 1)
 
-            for i in range(3):
-                if self.board[i][0] in [0,1] and self.board[i][1] in [0,1] and self.board[i][2] in [0,1]:
+                for i in range(3):
+                    if self.board[i][0] in [0,1] and self.board[i][1] in [0,1] and self.board[i][2] in [0,1]:
+                        count_min += 1
+                    if self.board[i][0] in [0,2] and self.board[i][1] in [0,2] and self.board[i][2] in [0,2]:
+                        count_max += 1
+                    if swapped[i][0] in [0,1] and swapped[i][1] in [0,1] and swapped[i][2] in [0,1]:
+                        count_min += 1
+                    if swapped[i][0] in [0,2] and swapped[i][1] in [0,2] and swapped[i][2] in [0,2]:
+                        count_max += 1
+                
+                if self.board[0][0] in [0,1] and self.board[1][1] in [0,1] and self.board[2][2] in [0,1]:
                     count_min += 1
-                if self.board[i][0] in [0,2] and self.board[i][1] in [0,2] and self.board[i][2] in [0,2]:
+                if self.board[0][0] in [0,2] and self.board[1][1] in [0,2] and self.board[2][2] in [0,2]:
                     count_max += 1
-                if swapped[i][0] in [0,1] and swapped[i][1] in [0,1] and swapped[i][2] in [0,1]:
+                if swapped[0][2] in [0,1] and swapped[1][1] in [0,1] and swapped[2][0] in [0,1]:
                     count_min += 1
-                if swapped[i][0] in [0,2] and swapped[i][1] in [0,2] and swapped[i][2] in [0,2]:
+                if swapped[0][2] in [0,2] and swapped[1][1] in [0,2] and swapped[2][0] in [0,2]:
                     count_max += 1
-            
-            if self.board[0][0] in [0,1] and self.board[1][1] in [0,1] and self.board[2][2] in [0,1]:
-                count_min += 1
-            if self.board[0][0] in [0,2] and self.board[1][1] in [0,2] and self.board[2][2] in [0,2]:
-                count_max += 1
-            if swapped[0][2] in [0,1] and swapped[1][1] in [0,1] and swapped[2][0] in [0,1]:
-                count_min += 1
-            if swapped[0][2] in [0,2] and swapped[1][1] in [0,2] and swapped[2][0] in [0,2]:
-                count_max += 1
 
-            self.evaluation = count_max - count_min
+                self.evaluation = count_max - count_min
             return self.evaluation
         
         if mode == 'max':
