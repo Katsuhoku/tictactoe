@@ -34,9 +34,9 @@ class Strategy:
 
         start = time.time()
         self.expand()
+        self.evaluate_tree()
         end = time.time()
         print(f'{end - start} segundos')
-        #self.evaluate_tree()
 
     def expand(self):
         """

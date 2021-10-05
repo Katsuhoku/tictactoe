@@ -33,22 +33,23 @@ class StateNode:
         self.board = board
         self.parent = parent
 
-        self._sym = 'none'
+        self._sym = ''
         count = 0
         if self.board[0][0] == self.board[0][2] and self.board[1][0] == self.board[1][2] and self.board[2][0] == self.board[2][2]:
             count += 1
-            self._sym = 'mv'
+            self._sym += 'mv'
         if self.board[0][0] == self.board[2][0] and self.board[0][1] == self.board[2][1] and self.board[0][2] == self.board[2][2]:
             count += 1
-            self._sym = 'mh'
+            self._sym += 'mh'
         if self.board[0][2] == self.board[2][0] and self.board[0][1] == self.board[1][0] and self.board[1][2] == self.board[2][1]:
             count += 1
-            self._sym = 'td'
+            self._sym += 'td'
         if self.board[0][0] == self.board[2][2] and self.board[0][1] == self.board[1][2] and self.board[1][0] == self.board[2][1]:
             count += 1
-            self._sym = 'ta'
+            self._sym += 'ta'
         
-        if count > 1: self._sym = 'all'
+        if count == 0: self._sym += 'none'
+        if count > 2: self._sym = 'all'
     
     def gen_children(self, max_turn):
         """
@@ -59,15 +60,19 @@ class StateNode:
 
         if self._sym == 'none':
             children = self.gen_children_none(max_turn)
-        if self._sym == 'mv':
+        elif self._sym == 'mv':
             children = self.gen_children_mv(max_turn)
-        if self._sym == 'mh':
+        elif self._sym == 'mh':
             children = self.gen_children_mh(max_turn)
-        if self._sym == 'td':
+        elif self._sym == 'td':
             children = self.gen_children_td(max_turn)
-        if self._sym == 'ta':
+        elif self._sym == 'ta':
             children = self.gen_children_ta(max_turn)
-        if self._sym == 'all':
+        elif self._sym == 'mvmh':
+            children = self.gen_children_mvmh(max_turn)
+        elif self._sym == 'tdta':
+            children = self.gen_children_tdta(max_turn)
+        elif self._sym == 'all':
             children = self.gen_children_all(max_turn)
 
         self.children = children
@@ -143,6 +148,34 @@ class StateNode:
         
         return children
     
+    def gen_children_mvmh(self, max_turn):
+        if max_turn: tile = 2
+        else: tile = 1
+
+        children = []
+        for i in range(2):
+            for j in range(1):
+                if self.board[i][j] == 0:
+                    self.board[i][j] = tile
+                    children.append(StateNode(np.copy(self.board).tolist(), self))
+                    self.board[i][j] = 0
+        
+        return children
+
+    def gen_children_tdta(self, max_turn):
+        if max_turn: tile = 2
+        else: tile = 1
+
+        children = []
+        for i in range(1):
+            for j in range(1,3):
+                if self.board[i][j] == 0:
+                    self.board[i][j] = tile
+                    children.append(StateNode(np.copy(self.board).tolist(), self))
+                    self.board[i][j] = 0
+        
+        return children
+    
     def gen_children_all(self, max_turn):
         if max_turn: tile = 2
         else: tile = 1
@@ -188,8 +221,31 @@ class StateNode:
                 los hijos
         """
         if not self.children:
-            self.evaluation = 0
-            return 0
+            count_max = 0
+            count_min = 0
+            swapped = np.swapaxes(self.board, 0, 1)
+
+            for i in range(3):
+                if self.board[i][0] in [0,1] and self.board[i][1] in [0,1] and self.board[i][2] in [0,1]:
+                    count_min += 1
+                if self.board[i][0] in [0,2] and self.board[i][1] in [0,2] and self.board[i][2] in [0,2]:
+                    count_max += 1
+                if swapped[i][0] in [0,1] and swapped[i][1] in [0,1] and swapped[i][2] in [0,1]:
+                    count_min += 1
+                if swapped[i][0] in [0,2] and swapped[i][1] in [0,2] and swapped[i][2] in [0,2]:
+                    count_max += 1
+            
+            if self.board[0][0] in [0,1] and self.board[1][1] in [0,1] and self.board[2][2] in [0,1]:
+                count_min += 1
+            if self.board[0][0] in [0,2] and self.board[1][1] in [0,2] and self.board[2][2] in [0,2]:
+                count_max += 1
+            if swapped[0][2] in [0,1] and swapped[1][1] in [0,1] and swapped[2][0] in [0,1]:
+                count_min += 1
+            if swapped[0][2] in [0,2] and swapped[1][1] in [0,2] and swapped[2][0] in [0,2]:
+                count_max += 1
+
+            self.evaluation = count_max - count_min
+            return self.evaluation
         
         if mode == 'max':
             self.evaluation =  max([c.evaluate(mode='min') for c in self.children])
