@@ -21,6 +21,9 @@ class StateNode:
     children : List[StateNode]
         Lista de los posibles siguientes movimientos a partir del
         estado de este nodo.
+    _sym : str
+        Ejes de simetría. Simplifican la generación de hijos y evita
+        comparaciones.
     """
 
     evaluation = 0
@@ -29,6 +32,23 @@ class StateNode:
     def __init__(self, board, parent):
         self.board = board
         self.parent = parent
+
+        self._sym = 'none'
+        count = 0
+        if self.board[0][0] == self.board[0][2] and self.board[1][0] == self.board[1][2] and self.board[2][0] == self.board[2][2]:
+            count += 1
+            self._sym = 'mv'
+        if self.board[0][0] == self.board[2][0] and self.board[0][1] == self.board[2][1] and self.board[0][2] == self.board[2][2]:
+            count += 1
+            self._sym = 'mh'
+        if self.board[0][2] == self.board[2][0] and self.board[0][1] == self.board[1][0] and self.board[1][2] == self.board[2][1]:
+            count += 1
+            self._sym = 'td'
+        if self.board[0][0] == self.board[2][2] and self.board[0][1] == self.board[1][2] and self.board[1][0] == self.board[2][1]:
+            count += 1
+            self._sym = 'ta'
+        
+        if count > 1: self._sym = 'all'
     
     def gen_children(self, max_turn):
         """
@@ -36,13 +56,100 @@ class StateNode:
             max_turn=True: Construye los siguientes movimientos con max (2)
             max_turn=False: Construye los siguientes movimientos con min (1)
         """
-        children = []
 
+        if self._sym == 'none':
+            children = self.gen_children_none(max_turn)
+        if self._sym == 'mv':
+            children = self.gen_children_mv(max_turn)
+        if self._sym == 'mh':
+            children = self.gen_children_mh(max_turn)
+        if self._sym == 'td':
+            children = self.gen_children_td(max_turn)
+        if self._sym == 'ta':
+            children = self.gen_children_ta(max_turn)
+        if self._sym == 'all':
+            children = self.gen_children_all(max_turn)
+
+        
+        return children
+    
+    def gen_children_none(self, max_turn):
         if max_turn: tile = 2
         else: tile = 1
 
+        children = []
         for i in range(3):
             for j in range(3):
+                if self.board[i][j] == 0:
+                    self.board[i][j] = tile
+                    children.append(StateNode(np.copy(self.board).tolist(), self))
+                    self.board[i][j] = 0
+        
+        return children
+    
+    def gen_children_mv(self, max_turn):
+        if max_turn: tile = 2
+        else: tile = 1
+
+        children = []
+        for i in range(3):
+            for j in range(2):
+                if self.board[i][j] == 0:
+                    self.board[i][j] = tile
+                    children.append(StateNode(np.copy(self.board).tolist(), self))
+                    self.board[i][j] = 0
+        
+        return children
+    
+    def gen_children_mh(self, max_turn):
+        if max_turn: tile = 2
+        else: tile = 1
+
+        children = []
+        for i in range(2):
+            for j in range(3):
+                if self.board[i][j] == 0:
+                    self.board[i][j] = tile
+                    children.append(StateNode(np.copy(self.board).tolist(), self))
+                    self.board[i][j] = 0
+        
+        return children
+    
+    def gen_children_td(self, max_turn):
+        if max_turn: tile = 2
+        else: tile = 1
+
+        children = []
+        for i in range(3):
+            for j in range(i,3):
+                if self.board[i][j] == 0:
+                    self.board[i][j] = tile
+                    children.append(StateNode(np.copy(self.board).tolist(), self))
+                    self.board[i][j] = 0
+        
+        return children
+    
+    def gen_children_ta(self, max_turn):
+        if max_turn: tile = 2
+        else: tile = 1
+
+        children = []
+        for i in range(3):
+            for j in range(3-i):
+                if self.board[i][j] == 0:
+                    self.board[i][j] = tile
+                    children.append(StateNode(np.copy(self.board).tolist(), self))
+                    self.board[i][j] = 0
+        
+        return children
+    
+    def gen_children_all(self, max_turn):
+        if max_turn: tile = 2
+        else: tile = 1
+
+        children = []
+        for i in range(2):
+            for j in range(i,2):
                 if self.board[i][j] == 0:
                     self.board[i][j] = tile
                     children.append(StateNode(np.copy(self.board).tolist(), self))

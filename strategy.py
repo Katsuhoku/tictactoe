@@ -55,10 +55,13 @@ class Strategy:
                 children = current_node.gen_children(max_turn)
                 for child in children: # hijos de un nodo del nivel actual
                     found = False
-                    for sibling in next_level: # nodos hijos generados hasta el momento
-                        if child.is_equivalent_to(sibling.board):
-                            found = True
-                            break
+                    #for sibling in next_level: # nodos hijos generados hasta el momento
+                        # if child.is_equivalent_to(sibling.board):
+                        #     found = True
+                        #     break
+                        # if np.array_equal(child.board, sibling.board):
+                        #     found = True
+                        #     break
                     
                     if not found:
                         next_level.append(child)
@@ -94,4 +97,4 @@ class Strategy:
         if not self.root.has_children():
             self.expand()
             self.evaluate_tree()
-    
+
