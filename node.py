@@ -1,4 +1,5 @@
 import numpy as np
+from random import randint
 
 winning_sequences = [
     [(0,0),(0,1),(0,2)],
@@ -40,8 +41,8 @@ class StateNode:
     evaluation = 0
     children = []
 
-    def __init__(self, board, parent):
-        self.board = board
+    def __init__(self, board, parent=None):
+        self.board = np.copy(board).tolist()
         self.parent = parent
         self.game_end = 0
 
@@ -223,6 +224,15 @@ class StateNode:
             mode='min': Retorna el nodo hijo con la menor evaluación
         """
 
+        bestc = self.children[0]
+        last_ev = bestc.evaluation
+        for child in self.children:
+            if (mode == 'max' and child.evaluation > last_ev) or (mode == 'min' and child.evaluation < last_ev):
+                bestc = child
+                last_ev = bestc.evaluation
+        
+        return bestc
+
     def evaluate(self, mode='max'):
         """
         Evalua este nodo. La evaluación se retorna y además se establece
@@ -279,30 +289,59 @@ class StateNode:
         
         return self.evaluation
     
-    def is_equivalent_to(self, board):
+    def is_equivalent_by(self, board):
         """
         Verifica si el estado del tablero almacenado en este nodo es
-        equivalente (simétrico) al tablero dado como argumento.
+        equivalente (simétrico) al tablero dado como argumento. Retorna
+        el nombre clave de la transformación mediante la cual se consigue
+        la equivalencia si se encuentra.
 
         Parameters
         ----------
         board : List[]
             Tablero en forma de listas de Python
         """
+        transforms = {
+            'ta': self.transpose_asc,
+            'td': self.transpose_desc,
+            'mh': self.mirror_horizontal,
+            'mv': self.mirror_vertical,
+            'r90': self.rot90,
+            'r180': self.rot180,
+            'r270': self.rot270,
+        }
+
+        if np.array_equal(self.board, board): return 'id'
+        for key in transforms:
+            if np.array_equal(transforms[key](), board): return key
+        
+        return 'none'
+    
+    def randt(self):
         transforms = [
             self.transpose_asc,
             self.transpose_desc,
+            self.identity,
             self.mirror_horizontal,
-            self.mirror_vertical,
-            self.rot90,
-            self.rot180,
-            self.rot270,
+            self.mirror_vertical
         ]
 
-        for t in transforms:
-            if np.array_equal(t(), board): return True
+        if self.parent._sym == 'none': return self.board
+        if self.parent._sym == 'all':
+            return transforms[randint(0,4)]()
+        if self.parent._sym == 'mvmh':
+            return transforms[randint(2,4)]()
+        if self.parent._sym == 'tdta':
+            return transforms[randint(0,2)]()
+        if self.parent._sym == 'mv':
+            return self.mirror_vertical() if randint(0,1) == 0 else self.identity()
+        if self.parent._sym == 'mh':
+            return self.mirror_horizontal() if randint(0,1) == 0 else self.identity()
+        if self.parent._sym == 'td':
+            return self.transpose_desc() if randint(0,1) == 0 else self.identity()
+        if self.parent._sym == 'ta':
+            return self.transpose_asc() if randint(0,1) == 0 else self.identity()
         
-        return False
 
     def has_children(self):
         """
@@ -310,6 +349,9 @@ class StateNode:
         """
         if not self.children: return False
         return True
+    
+    def identity(self):
+        return self.board
     
     def rot90(self):
         return np.rot90(self.board).tolist()
@@ -324,7 +366,7 @@ class StateNode:
         return np.flip(self.board, 1).tolist()
     
     def mirror_horizontal(self):
-        return np.flip(self.board).tolist()
+        return np.flip(self.board, 0).tolist()
     
     def transpose_desc(self):
         return np.swapaxes(self.board, 0, 1).tolist()

@@ -29,7 +29,7 @@ class Strategy:
     """
 
     def __init__(self, board, limh):
-        self.root = node.StateNode(board, None)
+        self.root = node.StateNode(board)
         self.limh = limh
 
         start = time.time()
@@ -54,22 +54,6 @@ class Strategy:
             for current_node in current_level: # conjunto de nodos en el mismo nivel
                 if current_node.game_end == 0:
                     next_level.extend(current_node.gen_children(max_turn))
-                # children = current_node.gen_children(max_turn)
-                # for child in children: # hijos de un nodo del nivel actual
-                #     found = False
-                #     #for sibling in next_level: # nodos hijos generados hasta el momento
-                #         # if child.is_equivalent_to(sibling.board):
-                #         #     found = True
-                #         #     break
-                #         # if np.array_equal(child.board, sibling.board):
-                #         #     found = True
-                #         #     break
-                    
-                #     if not found:
-                #         next_level.append(child)
-                #         current_node.add_child(child)
-                #         count += 1
-                
             
             if len(next_level) == 0: break
             count += len(next_level)
@@ -100,4 +84,8 @@ class Strategy:
         if not self.root.has_children():
             self.expand()
             self.evaluate_tree()
+        
+        print('|| Siguientes movimientos ||')
+        for child in self.root.children:
+            print(f'{child.board} {child.evaluation} {child.game_end}')
 
