@@ -46,6 +46,8 @@ start_end_points = [
 pygame.init()
 screen = pygame.display.set_mode( (WINDOW_WIDTH, WINDOW_HEIGHT) )
 pygame.display.set_caption( 'Tic Tac Toe' )
+game_icon = pygame.image.load('assets/icon.png')
+pygame.display.set_icon(game_icon)
 
 clock = pygame.time.Clock()
 
