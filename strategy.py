@@ -28,9 +28,10 @@ class Strategy:
         o por el jugador.
     """
 
-    def __init__(self, board, limh):
+    def __init__(self, board, limh, func):
         self.root = node.StateNode(board)
         self.limh = limh
+        self.func = func
 
         start = time.time()
         self.expand()
@@ -68,7 +69,7 @@ class Strategy:
         Evalúa el horizonte limitado y propaga la evaluación hacia los
         nodos padre hasta la raíz.
         """
-        self.root.evaluate()
+        self.root.evaluate(func=self.func)
 
     def next_step(self, move):
         """

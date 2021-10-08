@@ -60,32 +60,62 @@ tiles_rects = [[tiles_surfaces[i][j].get_rect() for j in range(3)] for i in rang
 # Config screen
 config_bg = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
 config_bg_rect = config_bg.get_rect(topleft=(0,0))
-config_panel = pygame.Surface((WINDOW_WIDTH - 30, WINDOW_HEIGHT - 300))
+config_panel = pygame.Surface((WINDOW_WIDTH - 30, WINDOW_HEIGHT - 150))
 config_panel_rect = config_panel.get_rect(center=(WINDOW_WIDTH/2, WINDOW_HEIGHT/2))
 
-difficulty_surfaces = [pygame.Surface( (110,50) ) for _ in range(3)]
+DBUTTON_HEIGHT = WINDOW_HEIGHT/4
+DBUTTON_WIDTH = (WINDOW_WIDTH-40)/8
+difficulty_surfaces = [pygame.Surface( (90,50) ) for _ in range(4)]
 difficulty_rects = [
-    difficulty_surfaces[0].get_rect(center=(WINDOW_WIDTH/2 - 120, WINDOW_HEIGHT/2)),
-    difficulty_surfaces[1].get_rect(center=(WINDOW_WIDTH/2, WINDOW_HEIGHT/2)),
-    difficulty_surfaces[2].get_rect(center=(WINDOW_WIDTH/2 + 120, WINDOW_HEIGHT/2)),
+    difficulty_surfaces[0].get_rect(center=(DBUTTON_WIDTH + 20, DBUTTON_HEIGHT + 50)),
+    difficulty_surfaces[1].get_rect(center=(DBUTTON_WIDTH * 3 + 20, DBUTTON_HEIGHT + 50)),
+    difficulty_surfaces[2].get_rect(center=(DBUTTON_WIDTH * 5 + 20, DBUTTON_HEIGHT + 50)),
+    difficulty_surfaces[3].get_rect(center=(DBUTTON_WIDTH * 7 + 20, DBUTTON_HEIGHT + 50)),
 ]
 difficulty_colors = [
     '#3eb33e',
     '#b39d3e',
-    '#b3423e'
+    '#b0653a',
+    '#ba332f',
 ]
 
-dtitle_font = pygame.font.Font('assets/Pixeltype.ttf', 60)
-dtitle_surface = dtitle_font.render('Dificultad', True, '#fafafa')
-dtitle_rect = dtitle_surface.get_rect(center=(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 - 70))
+EBUTTON_HEIGHT = DBUTTON_HEIGHT
+EBUTTON_WIDTH = (WINDOW_WIDTH-40) / 4
+evaluation_surfaces = [pygame.Surface( (185, 50) ) for _ in range(2)]
+evaluation_rects = [
+    evaluation_surfaces[0].get_rect(center=(EBUTTON_WIDTH + 20, EBUTTON_HEIGHT + 200)),
+    evaluation_surfaces[0].get_rect(center=(EBUTTON_WIDTH * 3 + 20, EBUTTON_HEIGHT + 200)),
+]
+
+ebutton_font = pygame.font.Font('assets/Pixeltype.ttf', 40)
+eselection_surfaces = [
+    ebutton_font.render('Trivial', True, '#fafafa'),
+    ebutton_font.render('Conteo', True, '#fafafa')
+]
+eselection_rects = [
+    eselection_surfaces[i].get_rect(center=(185/2,54/2)) for i in range(2)
+]
+
+evaluation_colors = [
+    '#2260ab',
+    '#8422ab'
+]
+
+title_font = pygame.font.Font('assets/Pixeltype.ttf', 60)
+
+dtitle_surface = title_font.render('Dificultad', True, '#fafafa')
+dtitle_rect = dtitle_surface.get_rect(center=(WINDOW_WIDTH/2, WINDOW_HEIGHT/2 - 150))
+
+etitle_surface = title_font.render('Evaluacion', True, '#fafafa')
+etitle_rect = etitle_surface.get_rect(center=(WINDOW_WIDTH/2, WINDOW_HEIGHT/2))
 
 button_font = pygame.font.Font('assets/Pixeltype.ttf', 45)
 
 accept_surface = button_font.render('Aceptar', True, '#fafafa')
-accept_rect = accept_surface.get_rect(center=(WINDOW_WIDTH/2 + 100, WINDOW_HEIGHT/2 + 70))
+accept_rect = accept_surface.get_rect(center=(WINDOW_WIDTH/2 + 100, WINDOW_HEIGHT/2 + 150))
 
 cancel_surface = button_font.render('Cancelar', True, '#fafafa')
-cancel_rect = cancel_surface.get_rect(center=(WINDOW_WIDTH/2 - 100, WINDOW_HEIGHT/2 + 70))
+cancel_rect = cancel_surface.get_rect(center=(WINDOW_WIDTH/2 - 100, WINDOW_HEIGHT/2 + 150))
 
 log_font = pygame.font.Font('assets/Pixeltype.ttf', 45)
 
@@ -108,10 +138,14 @@ def get_tile_clicked(mouse_pos):
     return tile
 
 def main():
-    LIMIT_H = 6
+    LIMIT_H = 4
+    evaluation_func = 'count'
+
     game_active = True
     config_active = False
     difficulty_selected = False
+    evaluation_selected = False
+
     player_turn = True if randint(0,1) == 1 else False
     last_start = player_turn
     winner = 0
@@ -130,10 +164,11 @@ def main():
     while True:
         # PC
         if game_active and not player_turn:
+            cooldown = randint(300,1200)
             now = pygame.time.get_ticks()
             if now - last >= cooldown:
                 if agent_player == None:
-                    agent_player = Agent(board, LIMIT_H)
+                    agent_player = Agent(board, LIMIT_H, evaluation_func)
                 board = agent_player.move(board)
                 player_turn = True
 
@@ -174,32 +209,45 @@ def main():
                             board[tile[0]][tile[1]] = 1
                             player_turn = False
                             if agent_player == None:
-                                agent_player = Agent(board, LIMIT_H)
+                                agent_player = Agent(board, LIMIT_H, evaluation_func)
                             agent_player.check_usermov(board)
                 else:
                     if config_active:
                         if not difficulty_selected: selected = LIMIT_H
+                        if not evaluation_selected: selected_func = 'count'
                         if config_bg_rect.collidepoint(pygame.mouse.get_pos()) and not config_panel_rect.collidepoint(pygame.mouse.get_pos()) or cancel_rect.collidepoint(pygame.mouse.get_pos()):
                             config_active = not config_active
                             game_active = not game_active
                             selected = LIMIT_H
                             difficulty_selected = False
+                            evaluation_selected = False
                             accept_surface.set_alpha(100)
                             for difficulty_surface in difficulty_surfaces:
                                 difficulty_surface.set_alpha(255)
+                            for evaluation_surface in evaluation_surfaces:
+                                evaluation_surface.set_alpha(255)
                         else:
+                            # Selector de Dificultad
                             for i, difficulty_rect in enumerate(difficulty_rects):
                                 if difficulty_rect.collidepoint(pygame.mouse.get_pos()):
                                     difficulty_selected = True
+                                    selected = (i + 1) * 2
+
                                     accept_surface.set_alpha(255)
+                                    for j, difficulty_rect in enumerate(difficulty_rects):
+                                        if i == j: difficulty_surfaces[j].set_alpha(255)
+                                        else: difficulty_surfaces[j].set_alpha(100)
 
-                                    difficulty_surfaces[i].set_alpha(255)
-                                    difficulty_surfaces[i-1].set_alpha(100)
-                                    difficulty_surfaces[(i+1)%3].set_alpha(100)
+                            # Selector de Evaluación
+                            for i, evaluation_rect in enumerate(evaluation_rects):
+                                if evaluation_rect.collidepoint(pygame.mouse.get_pos()):
+                                    evaluation_selected = True
+                                    if i == 0: selected_func = 'trivial'
+                                    else: selected_func = 'count'
 
-                                    if i == 0: selected = 2
-                                    if i == 1: selected = 4
-                                    if i == 2: selected = 6
+                                    for j, evaluation_rect in enumerate(evaluation_rects):
+                                        if i == j: evaluation_surfaces[j].set_alpha(255)
+                                        else: evaluation_surfaces[j].set_alpha(100)
                             
                             if accept_rect.collidepoint(pygame.mouse.get_pos()) and difficulty_selected: # Reset Game
                                 game_active = True
@@ -213,11 +261,15 @@ def main():
                                     [0,0,0],
                                 ]
                                 LIMIT_H = selected
+                                evaluation_func = selected_func
                                 selected = LIMIT_H
                                 difficulty_selected = False
+                                evaluation_selected = False
                                 accept_surface.set_alpha(100)
                                 for difficulty_surface in difficulty_surfaces:
                                     difficulty_surface.set_alpha(255)
+                                for evaluation_surface in evaluation_surfaces:
+                                    evaluation_surface.set_alpha(255)
 
         # Game window (board/log)
         screen.fill(LOG_BACKGROUND)
@@ -280,12 +332,20 @@ def main():
             screen.blit(config_panel, config_panel_rect)
             
             screen.blit(dtitle_surface, dtitle_rect)
+            screen.blit(etitle_surface, etitle_rect)
 
             for i, difficulty_surface in enumerate(difficulty_surfaces):
                 difficulty_surface.fill(difficulty_colors[i])
                 screen.blit(difficulty_surface, difficulty_rects[i])
+            
+            for i, evaluation_surface in enumerate(evaluation_surfaces):
+                evaluation_surface.fill(evaluation_colors[i])
+                evaluation_surface.blit(eselection_surfaces[i], eselection_rects[i])
+                screen.blit(evaluation_surface, evaluation_rects[i])
 
-            if not difficulty_selected:
+            if difficulty_selected and evaluation_selected:
+                accept_surface.set_alpha(255)
+            else:
                 accept_surface.set_alpha(100)
             screen.blit(accept_surface, accept_rect)
             screen.blit(cancel_surface, cancel_rect)

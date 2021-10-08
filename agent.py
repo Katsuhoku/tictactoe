@@ -9,8 +9,8 @@ class Agent:
     ---------
     """
 
-    def __init__(self, board, limh):
-        self.strategy = strategy.Strategy(board, limh)
+    def __init__(self, board, limh, func):
+        self.strategy = strategy.Strategy(board, limh, func)
 
     def move(self, current_board):
         """
@@ -22,8 +22,6 @@ class Agent:
 
         print('|| Movimiento ||')
         print(f'{best.board} {best.evaluation} {best.game_end} {transform} {best.parent._sym}')
-        
-        self.strategy.next_step(best)
 
         print('|| Transformación ||')
         next_board = best.randt()
@@ -55,6 +53,8 @@ class Agent:
             next_board = np.rot90(next_board,k=3).tolist()
         
         print(f'{next_board}')
+
+        self.strategy.next_step(best)
 
         return next_board
     
