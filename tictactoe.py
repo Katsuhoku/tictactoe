@@ -15,6 +15,10 @@ WINDOW_HEIGHT = 550
 BACKGROUND = '#14bdac'
 LOG_BACKGROUND = '#242424'
 LINE_COLOR = '#0da192'
+PLAYER_COLORS = [
+    '#f2ebd3',
+    '#545454'
+]
 
 winning_sequences = [
     [(0,0),(0,1),(0,2)],
