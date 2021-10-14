@@ -235,7 +235,7 @@ class StateNode:
         
         return bestc[randint(0, len(bestc)-1)]
 
-    def evaluate(self, func, mode='max'):
+    def evaluate(self, mode='max'):
         """
         Evalua este nodo. La evaluación se retorna y además se establece
         como atributo de este nodo.
@@ -258,39 +258,36 @@ class StateNode:
             elif self.game_end == 2:
                 self.evaluation = 99999
             else:
-                if func == 'trivial':
-                    self.evaluation = 0
-                else:
-                    count_max = 0
-                    count_min = 0
-                    swapped = np.swapaxes(self.board, 0, 1)
+                count_max = 0
+                count_min = 0
+                swapped = np.swapaxes(self.board, 0, 1)
 
-                    for i in range(3):
-                        if self.board[i][0] in [0,1] and self.board[i][1] in [0,1] and self.board[i][2] in [0,1]:
-                            count_min += 1
-                        if self.board[i][0] in [0,2] and self.board[i][1] in [0,2] and self.board[i][2] in [0,2]:
-                            count_max += 1
-                        if swapped[i][0] in [0,1] and swapped[i][1] in [0,1] and swapped[i][2] in [0,1]:
-                            count_min += 1
-                        if swapped[i][0] in [0,2] and swapped[i][1] in [0,2] and swapped[i][2] in [0,2]:
-                            count_max += 1
-                    
-                    if self.board[0][0] in [0,1] and self.board[1][1] in [0,1] and self.board[2][2] in [0,1]:
+                for i in range(3):
+                    if self.board[i][0] in [0,1] and self.board[i][1] in [0,1] and self.board[i][2] in [0,1]:
                         count_min += 1
-                    if self.board[0][0] in [0,2] and self.board[1][1] in [0,2] and self.board[2][2] in [0,2]:
+                    if self.board[i][0] in [0,2] and self.board[i][1] in [0,2] and self.board[i][2] in [0,2]:
                         count_max += 1
-                    if swapped[0][2] in [0,1] and swapped[1][1] in [0,1] and swapped[2][0] in [0,1]:
+                    if swapped[i][0] in [0,1] and swapped[i][1] in [0,1] and swapped[i][2] in [0,1]:
                         count_min += 1
-                    if swapped[0][2] in [0,2] and swapped[1][1] in [0,2] and swapped[2][0] in [0,2]:
+                    if swapped[i][0] in [0,2] and swapped[i][1] in [0,2] and swapped[i][2] in [0,2]:
                         count_max += 1
+                
+                if self.board[0][0] in [0,1] and self.board[1][1] in [0,1] and self.board[2][2] in [0,1]:
+                    count_min += 1
+                if self.board[0][0] in [0,2] and self.board[1][1] in [0,2] and self.board[2][2] in [0,2]:
+                    count_max += 1
+                if swapped[0][2] in [0,1] and swapped[1][1] in [0,1] and swapped[2][0] in [0,1]:
+                    count_min += 1
+                if swapped[0][2] in [0,2] and swapped[1][1] in [0,2] and swapped[2][0] in [0,2]:
+                    count_max += 1
 
-                    self.evaluation = count_max - count_min
+                self.evaluation = count_max - count_min
             return self.evaluation
         
         if mode == 'max':
-            self.evaluation =  max([c.evaluate(func, mode='min') for c in self.children])
+            self.evaluation =  max([c.evaluate(mode='min') for c in self.children])
         else:
-            self.evaluation =  min([c.evaluate(func, mode='max') for c in self.children])
+            self.evaluation =  min([c.evaluate(mode='max') for c in self.children])
         
         return self.evaluation
     

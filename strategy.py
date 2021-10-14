@@ -28,16 +28,14 @@ class Strategy:
         o por el jugador.
     """
 
-    def __init__(self, board, limh, func):
+    def __init__(self, board, limh):
         self.root = node.StateNode(board)
         self.limh = limh
-        self.func = func
 
         start = time.time()
         self.expand()
         self.evaluate_tree()
         end = time.time()
-        print(f'{end - start} segundos')
 
     def expand(self):
         """
@@ -61,15 +59,13 @@ class Strategy:
             current_level = np.copy(next_level)
             next_level = []
             max_turn = not max_turn
-        
-        print(f'{count} nodos generados')
     
     def evaluate_tree(self):
         """
         Evalúa el horizonte limitado y propaga la evaluación hacia los
         nodos padre hasta la raíz.
         """
-        self.root.evaluate(func=self.func)
+        self.root.evaluate()
 
     def next_step(self, move):
         """
@@ -85,8 +81,4 @@ class Strategy:
         if not self.root.has_children():
             self.expand()
             self.evaluate_tree()
-        
-        print('|| Siguientes movimientos ||')
-        for child in self.root.children:
-            print(f'{child.board} {child.evaluation} {child.game_end}')
 
