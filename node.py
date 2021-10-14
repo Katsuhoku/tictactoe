@@ -14,28 +14,10 @@ winning_sequences = [
 
 class StateNode:
     """
-    Clase para almacenar un estado del tablero, el estado del cual
-    proviene (parent) y los estados posibles que se generan desde
-    él (children).
-
-    Atributos
-    ---------
-    board : List[]
-        Tablero del Tic Tac Toe con los movimientos generados hasta
-        el momento en el juego, representado de forma homóloga con un
-        arreglo bidimensional.
-    evaluation : int
-        Evaluación del nodo. Por defecto es cero, pero debe ser
-        inicializada llamando a la función evaluate().
-    parent : StateNode
-        Estado previo a este, a partir del cual fue generado (None
-        si es la raíz).
-    children : List[StateNode]
-        Lista de los posibles siguientes movimientos a partir del
-        estado de este nodo.
-    _sym : str
-        Ejes de simetría. Simplifican la generación de hijos y evita
-        comparaciones.
+    Class representing a possible unique game state. Using symmetry properties
+    the creation of equivalent states is avoided.
+    A state is equivalent to another if applying geometric transformations its 
+    possible to obtain the same state.
     """
 
     evaluation = 0
@@ -74,9 +56,8 @@ class StateNode:
     
     def gen_children(self, max_turn):
         """
-        Genera los hijos para este nodo según sea el siguiente movimiento.
-            max_turn=True: Construye los siguientes movimientos con max (2)
-            max_turn=False: Construye los siguientes movimientos con min (1)
+        Generates all the possible unique children for this state, based on
+        the properties of this state and type of player (min or max) of this state.
         """
 
         if self._sym == 'none':
@@ -210,18 +191,12 @@ class StateNode:
                     self.board[i][j] = 0
         
         return children
-    
-    def add_child(self, child_node):
-        self.children.append(child_node)
 
     def best_child(self, mode='max'):
         """
-        Retorna el nodo con la mejor evaluación para el modo solicitado.
-        Los hijos de este nodo debieron haber sido previamente generados
-        y evaluados antes de llamar función, de lo contrario retornará
-        None.
-            mode='max': Retorna el nodo hijo con la mayor evaluación
-            mode='min': Retorna el nodo hijo con la menor evaluación
+        Returns the best child of this state for the mode specified in the argument.
+            mode='max': Returns the child with the maximum evaluation.
+            mode='min': Returns the child with the minimum evaluation.
         """
 
         bestc = []
@@ -237,20 +212,18 @@ class StateNode:
 
     def evaluate(self, mode='max'):
         """
-        Evalua este nodo. La evaluación se retorna y además se establece
-        como atributo de este nodo.
-
-        La evaluación será diferente según si el nodo tiene un
-        conjunto de hijos definido o no:
-            Si el nodo no tiene un conjunto de hijos definido, signfica
-            que está en el horizonte. La evaluación correspondrá a la
-            función de evaluación definida.
-            Si el nodo tiene un conjunto de hijos definido, la evaluación
-            se dará con base en el modo en el argumento
-                mode='max': se tomará la evaluación del mayor de
-                los hijos
-                mode='min': se tomará la evaluación del mayor de
-                los hijos
+        Evaluates the node in a recursive process.
+        If this is a winning state, it returns a great value if the victory is for max,
+        or a minor value if the victory is for min.
+        If this is not a winning state and is a node in the horizon (this means it has
+        no children) then the evaluation is defined by:
+            max_p = number of lines (columns, rows, diagonals) free of min moves where max could win.
+            min_p = number of lines (columns, rows, diagonals) free of max moves where min could win.
+            evaluation = max_p - min_p
+        If this node doesn't correspond with none of the above, then it gets the evaluation of
+        one of its child following the next rule:
+            -For a max node, gets the greatest evaluation value
+            -For a min node, gets the smallest evaluation value
         """
         if not self.children:
             if self.game_end == 1:
@@ -293,15 +266,10 @@ class StateNode:
     
     def is_equivalent_by(self, board):
         """
-        Verifica si el estado del tablero almacenado en este nodo es
-        equivalente (simétrico) al tablero dado como argumento. Retorna
-        el nombre clave de la transformación mediante la cual se consigue
-        la equivalencia si se encuentra.
-
-        Parameters
-        ----------
-        board : List[]
-            Tablero en forma de listas de Python
+        Checks if theres an equivalency with the board stored in this node
+        and the board passed in the argument.
+        Returns the code name of the transformation if its found, or a
+        string with 'none' if both boards aren't equivalent.
         """
         transforms = {
             'ta': self.transpose_asc,
@@ -320,6 +288,11 @@ class StateNode:
         return 'none'
     
     def randt(self):
+        """
+        Applies a random geometric transformation based on the symmetry axes
+        of this state board. If the board has no symmetry axes then it returns
+        the board with no changes.
+        """
         transforms = [
             self.transpose_asc,
             self.transpose_desc,
@@ -347,11 +320,12 @@ class StateNode:
 
     def has_children(self):
         """
-        Verifica si este nodo tiene nodos hijo.
+        Check if this node hast children.
         """
         if not self.children: return False
         return True
     
+    # --- GEOMETRIC TRANSFORMATIONS --- #
     def identity(self):
         return self.board
     

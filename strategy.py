@@ -1,31 +1,12 @@
-import node
-import numpy as np
 import time
+import numpy as np
+import node
 
 class Strategy:
     """
-    Clase para representar la estrategia de juego de
-    los agentes.
-
-    Atributos
-    ---------
-    root : StateNode
-        Raíz del árbol de búsqueda Minimax. La raíz es dinámica, según
-        se vaya avanzando en el juego se va moviendo hacia el estado
-        actual del juego.
-    limh : int
-        Horizonte limitado
-    
-    Métodos
-    -------
-    expand()
-        Expande el árbol desde la raíz actual.
-    evaluate_tree()
-        Evalúa los nodos en el horizonte limitado y propaga las evaluaciones
-        hacia la raíz.
-    next_step(move)
-        Mueve la raíz del árbol hacia el siguiente paso, dado por el Agente
-        o por el jugador.
+    Class representing the strategy for the Minimax Agent. Stores the root of
+    a tree of StateNodes representing the possible game states from the
+    current state of the tic tac toe to the next horizon.
     """
 
     def __init__(self, board, limh):
@@ -39,18 +20,15 @@ class Strategy:
 
     def expand(self):
         """
-        Expande el árbol desde la raíz definida en este objeto hasta el
-        horizonte limitado.
-
-        Este método es llamado al construir el árbol por primera vez y
-        cuando se alcanza el horizonte limitado.
+        Expands the tree from the initial state given when constructed to
+        the limited horizon.
         """
         max_turn = True
         current_level = [self.root]
         next_level = []
         count = 0
-        for _ in range(self.limh): # hasta el horizonte limitado
-            for current_node in current_level: # conjunto de nodos en el mismo nivel
+        for _ in range(self.limh): # 'til horizon
+            for current_node in current_level:
                 if current_node.game_end == 0:
                     next_level.extend(current_node.gen_children(max_turn))
             
@@ -62,20 +40,17 @@ class Strategy:
     
     def evaluate_tree(self):
         """
-        Evalúa el horizonte limitado y propaga la evaluación hacia los
-        nodos padre hasta la raíz.
+        Evaluates the root of the strategy. The node evaluation is a recursive
+        process, so it will actually evaluate from the limited horizon to the
+        root with a single call.
         """
         self.root.evaluate()
 
     def next_step(self, move):
         """
-        Establece el nodo obtenido como la raíz del árbol.
-        
-        El nodo pasado en el parámetro debe haber sido conseguido a
-        partir de los hijos de la raíz de este objeto (self.root) para
-        garantizar que se mantendrá el subárbol restante.
-            Para el Agente: self.root.best_child(mode)
-            Para el Jugador: <Strategy object>.equivalent_next_step(board)
+        Updates the root of the tree in this strategy. The root must be a
+        node from the children of the tree root. Also expands the new root
+        if doesn't have any children
         """
         self.root = move
         if not self.root.has_children():
