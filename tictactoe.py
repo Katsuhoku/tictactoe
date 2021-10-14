@@ -143,7 +143,7 @@ def get_tile_clicked(mouse_pos):
 
 def main():
     LIMIT_H = 4
-    players = 2
+    players = 1
 
     game_active = True
     config_active = False
@@ -168,7 +168,7 @@ def main():
     while True:
         if not players_selected: selected_players = 0
         # PC
-        if game_active and not player_turn:
+        if players == 1 and game_active and not player_turn:
             cooldown = randint(300,1200)
             now = pygame.time.get_ticks()
             if now - last >= cooldown:
@@ -209,14 +209,16 @@ def main():
                     ]
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if game_active:
-                    if player_turn:
-                        mouse_pos = pygame.mouse.get_pos()
-                        tile = get_tile_clicked(mouse_pos)
-                        last = pygame.time.get_ticks()
+                    mouse_pos = pygame.mouse.get_pos()
+                    tile = get_tile_clicked(mouse_pos)
+                    last = pygame.time.get_ticks()
 
-                        if board[tile[0]][tile[1]] == 0:
-                            board[tile[0]][tile[1]] = 1
-                            player_turn = False
+                    if board[tile[0]][tile[1]] == 0:
+                        if player_turn: board[tile[0]][tile[1]] = 1
+                        elif players == 2: board[tile[0]][tile[1]] = 2
+                        player_turn = not player_turn
+
+                        if players == 1:
                             if agent_player == None:
                                 agent_player = Agent(board, LIMIT_H)
                             agent_player.check_usermov(board)
@@ -269,7 +271,7 @@ def main():
                                         if i == j: players_surfaces[j].set_alpha(255)
                                         else: players_surfaces[j].set_alpha(100)
                             
-                            if accept_rect.collidepoint(pygame.mouse.get_pos()) and difficulty_selected: # Reset Game
+                            if accept_rect.collidepoint(pygame.mouse.get_pos()) and (difficulty_selected or selected_players == 2): # Reset Game
                                 game_active = True
                                 config_active = False
                                 player_turn = last_start
@@ -280,7 +282,7 @@ def main():
                                     [0,0,0],
                                     [0,0,0],
                                 ]
-                                LIMIT_H = selected
+                                if difficulty_selected: LIMIT_H = selected
                                 players = selected_players
                                 selected = LIMIT_H
                                 difficulty_selected = False
@@ -313,9 +315,19 @@ def main():
 
 
         if player_turn:
-            turn_surface = button_font.render('Turno: Jugador', True, '#fafafa')
+            if players == 1:
+                if winner == 0: turn_surface = button_font.render('Turno: Jugador', True, '#fafafa')
+                else: turn_surface = button_font.render('Ganador: PC!', True, '#fafafa')
+            else: 
+                if winner == 0: turn_surface = button_font.render('Turno: Jugador 1', True, '#fafafa')
+                else: turn_surface = button_font.render('Ganador: Jugador 2!', True, '#fafafa')
         else:
-            turn_surface = button_font.render('Turno: PC', True, '#fafafa')
+            if players == 1:
+                if winner == 0: turn_surface = button_font.render('Turno: PC', True, '#fafafa')
+                else: turn_surface = button_font.render('Ganador: Jugador!', True, '#fafafa')
+            else:
+                if winner == 0: turn_surface = button_font.render('Turno: Jugador 2', True, '#fafafa')
+                else: turn_surface = button_font.render('Ganador: Jugador 1!', True, '#fafafa')
         turn_rect = cancel_surface.get_rect(midleft=(20, WINDOW_HEIGHT - 50))
         screen.blit(turn_surface, turn_rect)
 
