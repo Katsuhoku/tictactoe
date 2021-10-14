@@ -59,6 +59,14 @@ tiles_coord = [
 ]
 tiles_rects = [[tiles_surfaces[i][j].get_rect() for j in range(3)] for i in range(3)]
 
+config_toggle_surf = pygame.Surface( (130, 46) )
+config_toggle_rect = config_toggle_surf.get_rect( bottomright=(WINDOW_WIDTH - 3, WINDOW_HEIGHT - 53) )
+
+reset_toggle_surf = pygame.Surface( (130, 46) )
+reset_toggle_rect = reset_toggle_surf.get_rect( bottomright=(WINDOW_WIDTH - 3, WINDOW_HEIGHT - 10) )
+
+ingame_font = pygame.font.Font('assets/Pixeltype.ttf', 40)
+
 # Config screen
 config_bg = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
 config_bg_rect = config_bg.get_rect(topleft=(0,0))
@@ -138,6 +146,8 @@ def get_tile_clicked(mouse_pos):
         tile[0] = 1 # Center row
     elif mouse_pos[1] <= 450:
         tile[0] = 2 # Bottom row
+    else:
+        tile = None
 
     return tile
 
@@ -208,20 +218,35 @@ def main():
                         [0,0,0],
                     ]
             if event.type == pygame.MOUSEBUTTONDOWN:
+                if reset_toggle_rect.collidepoint(pygame.mouse.get_pos()) and not config_active:
+                    game_active = True
+                    player_turn = not last_start
+                    last_start = player_turn
+                    agent_player = None
+                    winner = 0
+                    board = [
+                        [0,0,0],
+                        [0,0,0],
+                        [0,0,0],
+                    ]
+                if config_toggle_rect.collidepoint(pygame.mouse.get_pos()) and not config_active:
+                    game_active = not game_active
+                    config_active = not config_active
                 if game_active:
                     mouse_pos = pygame.mouse.get_pos()
                     tile = get_tile_clicked(mouse_pos)
                     last = pygame.time.get_ticks()
 
-                    if board[tile[0]][tile[1]] == 0:
-                        if player_turn: board[tile[0]][tile[1]] = 1
-                        elif players == 2: board[tile[0]][tile[1]] = 2
-                        player_turn = not player_turn
+                    if tile != None:
+                        if board[tile[0]][tile[1]] == 0:
+                            if player_turn: board[tile[0]][tile[1]] = 1
+                            elif players == 2: board[tile[0]][tile[1]] = 2
+                            player_turn = not player_turn
 
-                        if players == 1:
-                            if agent_player == None:
-                                agent_player = Agent(board, LIMIT_H)
-                            agent_player.check_usermov(board)
+                            if players == 1:
+                                if agent_player == None:
+                                    agent_player = Agent(board, LIMIT_H)
+                                agent_player.check_usermov(board)
                 else:
                     if config_active:
                         if not difficulty_selected: selected = LIMIT_H
@@ -312,7 +337,20 @@ def main():
         pygame.draw.line( screen, LINE_COLOR, (0,150), (450,150), 7 )
         pygame.draw.line( screen, LINE_COLOR, (0,300), (450,300), 7 )
 
+        config_toggle_surf.fill('#cc9349')
+        ct_surface = ingame_font.render('Config', True, '#fafafa')
+        ct_rect = ct_surface.get_rect( center=(130/2, 46/2) )
+        config_toggle_surf.blit(ct_surface, ct_rect)
+        screen.blit(config_toggle_surf, config_toggle_rect)
 
+        reset_toggle_surf.fill('#cc9349')
+        rt_surface = ingame_font.render('Reset', True, '#fafafa')
+        rt_rect = rt_surface.get_rect( center=(130/2, 46/2) )
+        reset_toggle_surf.blit(rt_surface, rt_rect)
+        screen.blit(reset_toggle_surf, reset_toggle_rect)
+
+        pygame.draw.rect( screen, '#d67631', config_toggle_rect, width=3)
+        pygame.draw.rect( screen, '#d67631', reset_toggle_rect, width=3)
 
         if player_turn:
             if players == 1:
