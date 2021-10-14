@@ -246,9 +246,12 @@ def main():
 
                     if tile != None:
                         if board[tile[0]][tile[1]] == 0:
-                            if player_turn: board[tile[0]][tile[1]] = 1 # Player 1
-                            elif players == 2: board[tile[0]][tile[1]] = 2 # Player 2 (if active)
-                            player_turn = not player_turn
+                            if player_turn:
+                                board[tile[0]][tile[1]] = 1 # Player 1
+                                player_turn = not player_turn
+                            elif players == 2:
+                                board[tile[0]][tile[1]] = 2 # Player 2 (if active)
+                                player_turn = not player_turn
 
                             # Minimax tree state update (if active)
                             if players == 1:
