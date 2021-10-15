@@ -329,7 +329,7 @@ def main():
                                 for players_surface in players_surfaces:
                                     players_surface.set_alpha(255)
 
-        # Game window (board/log)
+        # Game window (board)
         screen.fill(LOG_BACKGROUND)
         for i, tile_row in enumerate(tiles_surfaces):
             for j, tile_surface in enumerate(tile_row):
@@ -347,6 +347,7 @@ def main():
         pygame.draw.line( screen, LINE_COLOR, (0,150), (450,150), 7 )
         pygame.draw.line( screen, LINE_COLOR, (0,300), (450,300), 7 )
 
+        # Game board (log/controls)
         config_toggle_surf.fill('#cc9349')
         ct_surface = ingame_font.render('Config', True, '#fafafa')
         ct_rect = ct_surface.get_rect( center=(130/2, 46/2) )
@@ -362,30 +363,33 @@ def main():
         pygame.draw.rect( screen, '#d67631', config_toggle_rect, width=3)
         pygame.draw.rect( screen, '#d67631', reset_toggle_rect, width=3)
 
-        if player_turn:
+        full_board = True
+        for row in board:
+            if 0 in row: full_board = False
+        
+        if winner == 0 and full_board:
+            turn_surface = log = 'Empate'
+        elif player_turn:
             if players == 1:
-                if winner == 0: turn_surface = button_font.render('Turno: Jugador', True, '#fafafa')
-                else: turn_surface = button_font.render('Ganador: PC!', True, '#fafafa')
+                if winner == 0: log = 'Turno: Jugador'
+                else: log = 'Ganador: PC!'
             else: 
-                if winner == 0: turn_surface = button_font.render('Turno: Jugador 1', True, '#fafafa')
-                else: turn_surface = button_font.render('Ganador: Jugador 2!', True, '#fafafa')
+                if winner == 0: log = 'Turno: Jugador 1'
+                else: log = 'Ganador: Jugador 2!'
         else:
             if players == 1:
-                if winner == 0: turn_surface = button_font.render('Turno: PC', True, '#fafafa')
-                else: turn_surface = button_font.render('Ganador: Jugador!', True, '#fafafa')
+                if winner == 0: log = 'Turno: PC'
+                else: log = 'Ganador: Jugador!'
             else:
-                if winner == 0: turn_surface = button_font.render('Turno: Jugador 2', True, '#fafafa')
-                else: turn_surface = button_font.render('Ganador: Jugador 1!', True, '#fafafa')
+                if winner == 0: log = 'Turno: Jugador 2'
+                else: log = 'Ganador: Jugador 1!'
+        turn_surface = button_font.render(log, True, '#fafafa')
         turn_rect = cancel_surface.get_rect(midleft=(20, WINDOW_HEIGHT - 50))
         screen.blit(turn_surface, turn_rect)
 
         # Check for winner
         if game_active:
-            game_active = False
-            for row in board:
-                if 0 in row:
-                    game_active = True
-                    break
+            game_active = not full_board
 
             for w, ws in enumerate(winning_sequences):
                 if board[ws[0][0]][ws[0][1]] == 1 and board[ws[1][0]][ws[1][1]] == 1 and board[ws[2][0]][ws[2][1]] == 1:
